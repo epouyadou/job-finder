@@ -5,7 +5,7 @@ export interface JobInfo {
   title: string;
   description?: string;
   salary?: string;
+  type?: string;
   location?: string;
-  skills?: string[];
-  contact?: string[];
+  contacts?: string[];
 }
