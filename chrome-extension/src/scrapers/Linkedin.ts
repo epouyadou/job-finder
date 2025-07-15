@@ -1,4 +1,7 @@
-import { findPhoneNumbersInText, type NumberFound } from 'libphonenumber-js';
+import { getContactsFromText } from '../core/ContactScrapper';
+import { extractText } from '../core/DomTextExtractor';
+import { removeAccents } from '../core/RemoveTextAccents';
+import { getSalaryFromText } from '../core/SalaryScrapper';
 import type { JobInfo } from '../types/JobInfo';
 
 const JOB_DETAILS_SELECTOR: string = '#job-details';
@@ -11,9 +14,6 @@ const JOB_LOCATION_SELECTOR: string = '.job-details-jobs-unified-top-card__prima
 const JOB_VIEW_PAGE_PATHNAME = '/jobs/view/';
 const JOB_SEARCH_PAGE_PATHNAME = '/jobs/search/';
 const CURRENT_JOB_ID_QUERY_PARAM_NAME: string = 'currentJobId';
-
-const SALARY_REGEX: RegExp = /(?:remuneration | salaire | salary)(?:\s*:?\s*)((?:\d+(?:,)?)+(?:K|M)?)(?:\s*-\s*((?:\d+(?:,)?)+(?:K|M)?))?\s*(€|\$|£|¥)?/gi;
-const EMAIL_REGEX: RegExp = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
 
 export function scrapeLinkedIn(): JobInfo | null {
   if (!isJobPage(location.pathname)) {
@@ -36,10 +36,10 @@ export function scrapeLinkedIn(): JobInfo | null {
   }
 
   const jobDescription = getJobDescription();
-  const jobSalary = jobDescription ? getSalaryFromDescription(jobDescription) : undefined;
+  const jobSalary = jobDescription ? getSalaryFromText(jobDescription) : undefined;
   const jobType = getJobType();
   const jobLocation = getJobLocation();
-  const jobContacts = jobDescription ? getContacts(jobDescription) : undefined;
+  const jobContacts = jobDescription ? getContactsFromText(jobDescription) : undefined;
 
   const jobInfo: JobInfo = {
     id: jobId,
@@ -73,44 +73,11 @@ function getJobId(pathname: string, searchParams: URLSearchParams): string | und
 function getJobDescription(): string | undefined {
   const descriptionElement = document.querySelector(JOB_DESCRIPTION_SELECTOR);
   
-  if (descriptionElement) {
-    return removeAccents(extractText(descriptionElement).join('\n').trim());
+  if (!descriptionElement) {
+    return undefined;
   }
 
-  return undefined;
-}
-
-// Recursively extract text from child nodes and return as an array of strings
-function extractText(element: Element): string[] {
-  const textArray: string[] = [];
-  
-  Array.from(element.childNodes).forEach(node => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.trim();
-      if (text) {
-        textArray.push(text);
-      }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      textArray.push(...extractText(node as Element));
-    }
-  });
-
-  return textArray;
-}
-
-function getSalaryFromDescription(description: string): string | undefined {
-  const match = SALARY_REGEX.exec(description);
-  if (match) {
-    const minSalary = match[1];
-    const maxSalary = match[2];
-    const currency = match[3];
-    return `${minSalary} - ${maxSalary} ${currency}`.trim();
-  }
-  return undefined;
-}
-
-function removeAccents(text: string): string {
-  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return removeAccents(extractText(descriptionElement).join('\n').trim());
 }
 
 function getJobType(): string | undefined {
@@ -129,19 +96,3 @@ function getJobLocation(): string | undefined {
   return undefined;
 }
 
-function getContacts(description: string): string[] {
-  const contacts = new Set<string>();
-
-  const emails = description.match(EMAIL_REGEX);
-  if (emails) {
-    emails.forEach(email => contacts.add(email));
-  }
-
-  findPhoneNumbersInText(description).forEach((phone: NumberFound) => {
-    if (phone.number) {
-      contacts.add(phone.number.formatInternational());
-    }
-  });
-
-  return Array.from(contacts);
-}
