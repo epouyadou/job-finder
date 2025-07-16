@@ -1,5 +1,5 @@
 export interface JobInfo {
-  id: string;
+  url: string;
   domain: string;
   company: string;
   title: string;
@@ -8,4 +8,5 @@ export interface JobInfo {
   type?: string;
   location?: string;
   contacts?: string[];
+  postedDate?: Date;
 }

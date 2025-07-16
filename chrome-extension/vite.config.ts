@@ -16,6 +16,10 @@ export default defineConfig({
         {
           src: "public/icons",
           dest: "."
+        },
+        {
+          src: "src/injected-code/ApplyJobButton.css",
+          dest: "."
         }
       ]
     })

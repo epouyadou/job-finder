@@ -1,23 +1,12 @@
+import { LINKED_IN_CURRENT_JOB_ID_QUERY_PARAM_NAME, LINKED_IN_JOB_COMPANY_SELECTOR, LINKED_IN_JOB_DESCRIPTION_SELECTOR, LINKED_IN_JOB_DETAILS_SELECTOR, LINKED_IN_JOB_LOCATION_SELECTOR, LINKED_IN_JOB_POSTED_DATE_SELECTOR, LINKED_IN_JOB_TITLE_SELECTOR, LINKED_IN_JOB_TYPE_SELECTOR, LINKED_IN_JOB_VIEW_PAGE_PATHNAME, LINKED_IN_JOB_VIEW_WITH_JOB_ID_IN_QUERY_PARAMS } from '../constants/Linkedin.constant';
 import { getContactsFromText } from '../core/ContactScrapper';
 import { extractText } from '../core/DomTextExtractor';
+import { getDateFromPostedDateText } from '../core/PostedDateScrapper';
 import { removeAccents } from '../core/RemoveTextAccents';
 import { getSalaryFromText } from '../core/SalaryScrapper';
 import type { JobInfo } from '../types/JobInfo';
 
-const JOB_DETAILS_SELECTOR: string = '.jobs-details';
-const JOB_TITLE_SELECTOR: string = 'h1 a';
-const JOB_COMPANY_SELECTOR: string = '.job-details-jobs-unified-top-card__company-name a';
-const JOB_DESCRIPTION_SELECTOR: string = '.jobs-description__content';
-const JOB_TYPE_SELECTOR: string = '.job-details-jobs-unified-top-card__job-insight > span > span:nth-child(2)';
-const JOB_LOCATION_SELECTOR: string = '.job-details-jobs-unified-top-card__primary-description-container > span > span:nth-child(1)';
 
-const JOB_VIEW_PAGE_PATHNAME = '/jobs/view/';
-
-const CURRENT_JOB_ID_QUERY_PARAM_NAME = 'currentJobId';
-const JOB_VIEW_WITH_JOB_ID_IN_QUERY_PARAMS = [
-  '/jobs/search/',
-  '/jobs/collections/',
-];
 
 export function scrapeLinkedIn(): JobInfo | null {
   const searchParams = new URLSearchParams(location.search);
@@ -27,7 +16,7 @@ export function scrapeLinkedIn(): JobInfo | null {
     return null;
   }
 
-  const jobDetails = document.querySelector(JOB_DETAILS_SELECTOR);
+  const jobDetails = document.querySelector(LINKED_IN_JOB_DETAILS_SELECTOR);
   if (!jobDetails) {
     console.warn('Job details element not found');
     return null;
@@ -35,8 +24,8 @@ export function scrapeLinkedIn(): JobInfo | null {
 
   const jobId = getJobId(location.pathname, searchParams);
   const domain = location.hostname;
-  const jobTitle = jobDetails.querySelector(JOB_TITLE_SELECTOR)?.textContent?.trim() || undefined;
-  const jobCompany = jobDetails.querySelector(JOB_COMPANY_SELECTOR)?.textContent?.trim() || undefined;
+  const jobTitle = jobDetails.querySelector(LINKED_IN_JOB_TITLE_SELECTOR)?.textContent?.trim() || undefined;
+  const jobCompany = jobDetails.querySelector(LINKED_IN_JOB_COMPANY_SELECTOR)?.textContent?.trim() || undefined;
 
   if (!jobId || !jobTitle || !jobCompany) {
     console.warn(`Job ID, title, or company not found (Job ID: ${jobId}, Title: ${jobTitle}, Company: ${jobCompany})`);
@@ -48,9 +37,10 @@ export function scrapeLinkedIn(): JobInfo | null {
   const jobType = getJobType();
   const jobLocation = getJobLocation();
   const jobContacts = jobDescription ? getContactsFromText(jobDescription) : undefined;
+  const jobPostedDate = getJobPostedDate();
 
   const jobInfo: JobInfo = {
-    id: jobId,
+    url: `https://${domain}/jobs/view/${jobId}`,
     domain: domain,
     company: jobCompany,
     title: jobTitle,
@@ -59,37 +49,36 @@ export function scrapeLinkedIn(): JobInfo | null {
     type: jobType,
     location: jobLocation,
     contacts: jobContacts,
+    postedDate: jobPostedDate,
   };
 
   return jobInfo;
 }
 
 function isJobPageWithJobIdInQueryParams(pathname: string, searchParams: URLSearchParams): boolean {
-  return JOB_VIEW_WITH_JOB_ID_IN_QUERY_PARAMS.some(
+  return LINKED_IN_JOB_VIEW_WITH_JOB_ID_IN_QUERY_PARAMS.some(
     prefix => pathname.startsWith(prefix) 
-    && searchParams.has(CURRENT_JOB_ID_QUERY_PARAM_NAME)
+    && searchParams.has(LINKED_IN_CURRENT_JOB_ID_QUERY_PARAM_NAME)
   );
 }
 
 function isJobPage(pathname: string, searchParams: URLSearchParams): boolean {
-  return pathname.startsWith(JOB_VIEW_PAGE_PATHNAME) 
+  return pathname.startsWith(LINKED_IN_JOB_VIEW_PAGE_PATHNAME) 
       || isJobPageWithJobIdInQueryParams(pathname, searchParams)
 }
 
 function getJobId(pathname: string, searchParams: URLSearchParams): string | undefined {
-  if (pathname.startsWith(JOB_VIEW_PAGE_PATHNAME)) {
-    console.log('--- Id in pathname:', pathname);
+  if (pathname.startsWith(LINKED_IN_JOB_VIEW_PAGE_PATHNAME)) {
     const id = pathname.split('/').pop();
     return id || undefined;
   } else if (isJobPageWithJobIdInQueryParams(pathname, searchParams)) {
-    console.log('--- Id in search params:', searchParams.get(CURRENT_JOB_ID_QUERY_PARAM_NAME));
-    return searchParams.get(CURRENT_JOB_ID_QUERY_PARAM_NAME) || undefined;
+    return searchParams.get(LINKED_IN_CURRENT_JOB_ID_QUERY_PARAM_NAME) || undefined;
   }
   return undefined;
 }
 
 function getJobDescription(): string | undefined {
-  const descriptionElement = document.querySelector(JOB_DESCRIPTION_SELECTOR);
+  const descriptionElement = document.querySelector(LINKED_IN_JOB_DESCRIPTION_SELECTOR);
   
   if (!descriptionElement) {
     return undefined;
@@ -99,7 +88,7 @@ function getJobDescription(): string | undefined {
 }
 
 function getJobType(): string | undefined {
-  const jobTypeElement = document.querySelector(JOB_TYPE_SELECTOR);
+  const jobTypeElement = document.querySelector(LINKED_IN_JOB_TYPE_SELECTOR);
   if (jobTypeElement) {
     return jobTypeElement.textContent?.trim();
   }
@@ -107,10 +96,25 @@ function getJobType(): string | undefined {
 }
 
 function getJobLocation(): string | undefined {
-  const jobLocationElement = document.querySelector(JOB_LOCATION_SELECTOR);
+  const jobLocationElement = document.querySelector(LINKED_IN_JOB_LOCATION_SELECTOR);
   if (jobLocationElement) {
     return jobLocationElement.textContent?.trim();
   }
   return undefined;
 }
 
+function getJobPostedDate(): Date | undefined {
+  const postedDateElement = document.querySelector(LINKED_IN_JOB_POSTED_DATE_SELECTOR);
+
+  console.log('[Job Extension] Scraping posted date from LinkedIn job page:', postedDateElement);
+  console.log('[Job Extension] Posted date element text content:', postedDateElement?.textContent);
+
+  if (postedDateElement && postedDateElement.textContent) {
+    console.log('[Job Extension] Scraping posted date from LinkedIn job page');
+    return getDateFromPostedDateText(postedDateElement.textContent.trim());
+  }
+
+  console.warn('[Job Extension] Posted date element not found or has no text content');
+
+  return undefined;
+}

@@ -1,0 +1,26 @@
+
+#job-finder-apply-button {
+    display: inline-block;
+    margin-left: 1rem;
+
+    background-color: #4dfe5d;
+    color: #153a18;
+}
+
+#job-finder-apply-button:hover {
+    filter: brightness(85%);
+}
+
+#job-finder-apply-button:active {
+    filter: brightness(75%);
+}
+
+#job-finder-apply-button.linkedin-job-finder-apply-button {
+    min-height: 4rem;
+    padding: 1rem 2rem;
+    border-radius: 99.9rem;
+}
+
+#job-finder-apply-button.wttj-job-finder-apply-button {
+    border: 1px solid #1fba2d;
+}

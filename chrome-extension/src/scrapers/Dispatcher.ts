@@ -1,3 +1,4 @@
+import { Website } from '../core/Website';
 import type { JobInfo } from '../types/JobInfo';
 import { scrapeGeneric } from './Generic';
 import { scrapeLinkedIn } from './Linkedin';
@@ -13,10 +14,10 @@ export function scrapeJob(): JobInfo | null {
 
   let job: JobInfo | null = null;
 
-  if (hostname.includes('linkedin.com')) {
+  if (Website.isLinkedIn()) {
     console.log('Detected LinkedIn job page');
     job = scrapeLinkedIn();
-  } else if (hostname.includes('welcometothejungle.com')) {
+  } else if (Website.isWttJ()) {
     console.log('Detected Welcome to the Jungle job page');
     job = scrapeWelcomeToTheJungle();
   } else {

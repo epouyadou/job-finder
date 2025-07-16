@@ -1,38 +1,30 @@
+import { WTTJ_JOB_COMPANY_SELECTOR, WTTJ_JOB_DESCRIPTION_SELECTOR, WTTJ_JOB_DETAILS_SELECTOR, WTTJ_JOB_LOCATION_SELECTOR, WTTJ_JOB_PATHNAME_REGEX, WTTJ_JOB_POSTED_DATE_SELECTOR, WTTJ_JOB_SALARY_SELECTOR, WTTJ_JOB_TITLE_SELECTOR, WTTJ_JOB_TYPE_SELECTOR } from '../constants/WttJ.constant';
 import { getContactsFromText } from '../core/ContactScrapper';
 import { extractText } from '../core/DomTextExtractor';
+import { getDateFromPostedDateText } from '../core/PostedDateScrapper';
 import { removeAccents } from '../core/RemoveTextAccents';
 import { getSalaryFromText } from '../core/SalaryScrapper';
 import type { JobInfo } from '../types/JobInfo';
 
-const JOB_DETAILS_SELECTOR: string = 'div[data-testid="job-metadata-block"]';
-const JOB_TITLE_SELECTOR: string = 'h2';
-const JOB_COMPANY_SELECTOR: string = 'div a > span';
 
-const JOB_TYPE_SELECTOR: string = 'i[name="contract"] + span';
-const JOB_LOCATION_SELECTOR: string = 'i[name="location"] + span span';
-const JOB_SALARY_SELECTOR: string = 'i[name="salary"]';
-
-const JOB_DESCRIPTION_SELECTOR: string = 'div[data-testid="job-section-description"]';
-
-const WTTJ_JOB_PATHNAME_REGEX = /^[a-z]{2,3}\/companies\/[a-zA-Z0-9-_]*\/jobs\/[a-zA-Z0-9-_]*$/g;
 
 export function scrapeWelcomeToTheJungle(): JobInfo | null {
   if (!isJobPage(location.pathname)) {
       return null;
     }
   
-    const jobId = location.pathname;
+    const jobUrl = location.pathname;
     const domain = location.hostname;
   
-    const jobDetails = document.querySelector(JOB_DETAILS_SELECTOR);
+    const jobDetails = document.querySelector(WTTJ_JOB_DETAILS_SELECTOR);
     if (!jobDetails) {
       return null;
     }
   
-    const jobCompany = jobDetails.querySelector(JOB_COMPANY_SELECTOR)?.textContent?.trim() || undefined;
-    const jobTitle = jobDetails.querySelector(JOB_TITLE_SELECTOR)?.textContent?.trim() || undefined;
+    const jobCompany = jobDetails.querySelector(WTTJ_JOB_COMPANY_SELECTOR)?.textContent?.trim() || undefined;
+    const jobTitle = jobDetails.querySelector(WTTJ_JOB_TITLE_SELECTOR)?.textContent?.trim() || undefined;
   
-    if (!jobId || !jobTitle || !jobCompany) {
+    if (!jobUrl || !jobTitle || !jobCompany) {
       return null;
     }
   
@@ -43,12 +35,13 @@ export function scrapeWelcomeToTheJungle(): JobInfo | null {
       jobSalary = jobDescription ? getSalaryFromText(jobDescription) : undefined;
     }
 
-    const jobType = jobDetails.querySelector(JOB_TYPE_SELECTOR)?.textContent?.trim() || undefined;
-    const jobLocation = jobDetails.querySelector(JOB_LOCATION_SELECTOR)?.textContent?.trim() || undefined;
+    const jobType = jobDetails.querySelector(WTTJ_JOB_TYPE_SELECTOR)?.textContent?.trim() || undefined;
+    const jobLocation = jobDetails.querySelector(WTTJ_JOB_LOCATION_SELECTOR)?.textContent?.trim() || undefined;
     const jobContacts = jobDescription ? getContactsFromText(jobDescription) : undefined;
+    const jobPostedDate = getJobPostedDate(jobDetails);
 
     const jobInfo: JobInfo = {
-      id: jobId,
+      url: `https://${domain}${jobUrl}`,
       domain: domain,
       company: jobCompany,
       title: jobTitle,
@@ -57,6 +50,7 @@ export function scrapeWelcomeToTheJungle(): JobInfo | null {
       type: jobType,
       location: jobLocation,
       contacts: jobContacts,
+      postedDate: jobPostedDate,
     };
   
     return jobInfo;
@@ -67,7 +61,7 @@ function isJobPage(pathname: string): boolean {
 }
 
 function getJobDescription(): string | undefined {
-  const descriptionElement = document.querySelector(JOB_DESCRIPTION_SELECTOR);
+  const descriptionElement = document.querySelector(WTTJ_JOB_DESCRIPTION_SELECTOR);
   
   if (!descriptionElement) {
     return undefined;
@@ -77,7 +71,7 @@ function getJobDescription(): string | undefined {
 }
 
 function getJobSalary(jobDetails: Element): string | undefined {
-  const salaryElement = jobDetails.querySelector(JOB_SALARY_SELECTOR);
+  const salaryElement = jobDetails.querySelector(WTTJ_JOB_SALARY_SELECTOR);
   if (!salaryElement) {
     return undefined;
   }
@@ -94,4 +88,14 @@ function getJobSalary(jobDetails: Element): string | undefined {
 
   const text = textNode!.textContent!.trim();
   console.log(text);
+}
+
+function getJobPostedDate(jobDetails: Element): Date | undefined {
+  const postedDateElement = jobDetails.querySelector(WTTJ_JOB_POSTED_DATE_SELECTOR);
+
+  if (postedDateElement && postedDateElement.textContent) {
+    return getDateFromPostedDateText(postedDateElement.textContent.trim());
+  }
+
+  return undefined;
 }
