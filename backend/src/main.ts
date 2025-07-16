@@ -13,6 +13,17 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.enableCors({
+    origin: [
+      'job-finder-postgresql',
+      'https://www.linkedin.com',
+      'https://www.welcometothejungle.com',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true,
+  });
+
   await app.listen(3000);
 }
 

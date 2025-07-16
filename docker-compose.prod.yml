@@ -39,12 +39,3 @@ services:
       # Persist the database data on the disk and not in a volume
       - ./database/data:/var/lib/postgresql/data
     restart: always
-
-  redis:
-    container_name: job-finder-redis
-    image: redis:7.4.1
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-    ports:
-      - "6379:6379"
-    restart: always

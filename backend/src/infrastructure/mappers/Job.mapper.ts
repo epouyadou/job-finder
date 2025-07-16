@@ -33,8 +33,8 @@ export class JobMapper {
     const jobStatus = JobStatus.fromString(persistedJob.status);
 
     return Job.create({
-      id: persistedJob.id.toString(),
-      companyId: persistedJob.company_id.toString(),
+      id: persistedJob.id,
+      companyId: persistedJob.company_id,
       title: persistedJob.title,
       description: persistedJob.description,
       type: jobType,

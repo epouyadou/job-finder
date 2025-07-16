@@ -5,12 +5,13 @@ import {
   CompanyMapper,
   PersistedCompany,
 } from '@infrastructure/mappers/Company.mapper';
+import { Inject } from '@nestjs/common';
 
 export class CompanyRepository implements ICompanyRepository {
-  constructor(private readonly postgres: PostgresPool) {}
+  constructor(@Inject() private readonly postgres: PostgresPool) {}
 
-  async findOneById(id: string): Promise<Company | null> {
-    const query = `SELECT * FROM companies WHERE id = $1`;
+  async findOneById(id: number): Promise<Company | null> {
+    const query = `SELECT * FROM jobfinder.companies WHERE id = $1`;
     const params = [id];
     const result = await this.postgres.query(query, params);
 
@@ -21,8 +22,20 @@ export class CompanyRepository implements ICompanyRepository {
     return CompanyMapper.toDomain(result.rows[0] as PersistedCompany);
   }
 
+  async findOneByName(name: string): Promise<Company | null> {
+    const query = `SELECT * FROM jobfinder.companies WHERE name = $1`;
+    const params = [name];
+    const result = await this.postgres.query(query, params);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    return CompanyMapper.toDomain(result.rows[0] as PersistedCompany);
+  }
+
   async findAll(): Promise<Company[]> {
-    const query = `SELECT * FROM companies`;
+    const query = `SELECT * FROM jobfinder.companies`;
     const result = await this.postgres.query(query);
 
     if (result.rows.length === 0) {
@@ -34,7 +47,7 @@ export class CompanyRepository implements ICompanyRepository {
 
   async save(company: Company): Promise<Company> {
     const query = `
-        INSERT INTO companies (name, created_at, updated_at) 
+        INSERT INTO jobfinder.companies (name, created_at, updated_at) 
         VALUES ($1, $2, $3) 
         RETURNING *`;
     const params = [company.name, company.createdAt, company.updatedAt];
@@ -49,7 +62,7 @@ export class CompanyRepository implements ICompanyRepository {
 
   async update(company: Company): Promise<Company> {
     const query = `
-        UPDATE companies 
+        UPDATE jobfinder.companies 
         SET name = $1, updated_at = $2 
         WHERE id = $3 
         RETURNING *`;
@@ -65,7 +78,7 @@ export class CompanyRepository implements ICompanyRepository {
 
   async delete(company: Company): Promise<void> {
     const query = `
-        DELETE FROM companies 
+        DELETE FROM jobfinder.companies 
         WHERE id = $1`;
     const params = [company.id];
     const result = await this.postgres.query(query, params);

@@ -3,7 +3,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApplyJobDto } from '@presentation/controllers/dto/ApplyJob.dto';
 
-@Controller('job-application')
+@Controller('job-applications')
 export class JobApplicationController {
   constructor(private readonly commandBus: CommandBus) {}
 

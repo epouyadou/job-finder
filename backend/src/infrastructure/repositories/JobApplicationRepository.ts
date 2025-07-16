@@ -5,12 +5,13 @@ import {
   JobApplicationMapper,
   PersistedJobApplication,
 } from '@infrastructure/mappers/JobApplication.mapper';
+import { Inject } from '@nestjs/common';
 
 export class JobApplicationRepository implements IJobApplicationRepository {
-  constructor(private readonly postgres: PostgresPool) {}
+  constructor(@Inject() private readonly postgres: PostgresPool) {}
 
   async findOneById(id: number): Promise<JobApplication | null> {
-    const query = `SELECT * FROM job_applications WHERE id = $1`;
+    const query = `SELECT * FROM jobfinder.job_applications WHERE id = $1`;
     const params = [id];
     const result = await this.postgres.query(query, params);
 
@@ -24,7 +25,7 @@ export class JobApplicationRepository implements IJobApplicationRepository {
   }
 
   async findAllByJobId(jobId: number): Promise<JobApplication[]> {
-    const query = `SELECT * FROM job_applications WHERE job_id = $1`;
+    const query = `SELECT * FROM jobfinder.job_applications WHERE job_id = $1`;
     const params = [jobId];
     const result = await this.postgres.query(query, params);
 
@@ -38,7 +39,7 @@ export class JobApplicationRepository implements IJobApplicationRepository {
   }
 
   async findAllByStatus(status: string): Promise<JobApplication[]> {
-    const query = `SELECT * FROM job_applications WHERE status = $1`;
+    const query = `SELECT * FROM jobfinder.job_applications WHERE status = $1`;
     const params = [status];
     const result = await this.postgres.query(query, params);
 
@@ -52,7 +53,7 @@ export class JobApplicationRepository implements IJobApplicationRepository {
   }
 
   async findAll(): Promise<JobApplication[]> {
-    const query = `SELECT * FROM job_applications`;
+    const query = `SELECT * FROM jobfinder.job_applications`;
     const result = await this.postgres.query(query);
 
     if (result.rows.length === 0) {
@@ -66,7 +67,7 @@ export class JobApplicationRepository implements IJobApplicationRepository {
 
   async save(jobApplication: JobApplication): Promise<JobApplication> {
     const query = `
-        INSERT INTO job_applications (job_id, status, rejected_cause, specified_rejected_cause, applied_at, updated_at) 
+        INSERT INTO jobfinder.job_applications (job_id, status, rejected_cause, specified_rejected_cause, applied_at, updated_at) 
         VALUES ($1, $2, $3, $4, $5, $6) 
         RETURNING *`;
     const params = [
@@ -91,7 +92,7 @@ export class JobApplicationRepository implements IJobApplicationRepository {
 
   async update(jobApplication: JobApplication): Promise<JobApplication> {
     const query = `
-      UPDATE job_applications
+      UPDATE jobfinder.job_applications
       SET status = $1, rejected_cause = $2, specified_rejected_cause = $3, applied_at = $4, updated_at = $5
       WHERE id = $6
       RETURNING *`;
@@ -117,7 +118,7 @@ export class JobApplicationRepository implements IJobApplicationRepository {
 
   async delete(jobApplication: JobApplication): Promise<void> {
     const query = `
-      DELETE FROM job_applications
+      DELETE FROM jobfinder.job_applications
       WHERE id = $1`;
     const params = [jobApplication.id];
 

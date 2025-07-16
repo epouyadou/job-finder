@@ -1,8 +1,8 @@
-export type JobTypeType = 'full-time' | 'part-time' | 'contract' | 'internship';
+export type JobTypeType = 'full_time' | 'part_time' | 'contract' | 'internship';
 
 export class JobType {
-  static FULL_TIME: JobType = new JobType('full-time');
-  static PART_TIME: JobType = new JobType('part-time');
+  static FULL_TIME: JobType = new JobType('full_time');
+  static PART_TIME: JobType = new JobType('part_time');
   static CONTRACT: JobType = new JobType('contract');
   static INTERNSHIP: JobType = new JobType('internship');
 
@@ -10,9 +10,9 @@ export class JobType {
 
   static fromString(value: string): JobType {
     switch (value) {
-      case 'full-time':
+      case 'full_time':
         return JobType.FULL_TIME;
-      case 'part-time':
+      case 'part_time':
         return JobType.PART_TIME;
       case 'contract':
         return JobType.CONTRACT;

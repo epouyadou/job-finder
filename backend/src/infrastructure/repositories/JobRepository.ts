@@ -3,12 +3,13 @@ import { Job } from '@domain/jobs/Job';
 import { RangeSalary, Salary, UndefinedSalary } from '@domain/jobs/JobSalary';
 import { PostgresPool } from '@infrastructure/database/postgres/postgres';
 import { JobMapper, PersistedJob } from '@infrastructure/mappers/Job.mapper';
+import { Inject } from '@nestjs/common';
 
 export class JobRepository implements IJobRepository {
-  constructor(private readonly postgres: PostgresPool) {}
+  constructor(@Inject() private readonly postgres: PostgresPool) {}
 
   async findOneById(id: number): Promise<Job | null> {
-    const query = `SELECT * FROM jobs WHERE id = $1`;
+    const query = `SELECT * FROM jobfinder.jobs WHERE id = $1`;
     const params = [id];
     const result = await this.postgres.query(query, params);
 
@@ -20,7 +21,7 @@ export class JobRepository implements IJobRepository {
   }
 
   async findAllByCompanyId(companyId: number): Promise<Job[]> {
-    const query = `SELECT * FROM jobs WHERE company_id = $1`;
+    const query = `SELECT * FROM jobfinder.jobs WHERE company_id = $1`;
     const params = [companyId];
     const result = await this.postgres.query(query, params);
     if (result.rows.length === 0) {
@@ -30,7 +31,7 @@ export class JobRepository implements IJobRepository {
   }
 
   async findAllByStatus(status: string): Promise<Job[]> {
-    const query = `SELECT * FROM jobs WHERE status = $1`;
+    const query = `SELECT * FROM jobfinder.jobs WHERE status = $1`;
     const params = [status];
     const result = await this.postgres.query(query, params);
     if (result.rows.length === 0) {
@@ -40,7 +41,7 @@ export class JobRepository implements IJobRepository {
   }
 
   async findAll(): Promise<Job[]> {
-    const query = `SELECT * FROM jobs`;
+    const query = `SELECT * FROM jobfinder.jobs`;
     const result = await this.postgres.query(query);
     if (result.rows.length === 0) {
       return [];
@@ -50,8 +51,8 @@ export class JobRepository implements IJobRepository {
 
   async save(job: Job): Promise<Job> {
     const query = `
-      INSERT INTO jobs (company_id, title, description, type, status, url, location, salary_amount, salary_min_amount, salary_max_amount, salary_currency, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO jobfinder.jobs (company_id, title, description, type, status, url, location, salary_amount, salary_min_amount, salary_max_amount, salary_currency, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *;
     `;
     const params = [
@@ -79,7 +80,7 @@ export class JobRepository implements IJobRepository {
 
   async update(job: Job): Promise<Job> {
     const query = `
-      UPDATE jobs
+      UPDATE jobfinder.jobs
       SET company_id = $1, title = $2, description = $3, type = $4, status = $5, url = $6, location = $7, salary_amount = $8, salary_min_amount = $9, salary_max_amount = $10, salary_currency = $11, created_at = $12, updated_at = $13
       WHERE id = $14
       RETURNING *;
@@ -110,7 +111,7 @@ export class JobRepository implements IJobRepository {
   }
 
   async delete(job: Job): Promise<void> {
-    const query = `DELETE FROM jobs WHERE id = $1`;
+    const query = `DELETE FROM jobfinder.jobs WHERE id = $1`;
     const params = [job.id];
     const result = await this.postgres.query(query, params);
     if (result.rowCount === 0) {

@@ -57,7 +57,8 @@ export class ApplyJobHandler implements ICommandHandler<ApplyJobCommand> {
     } = command;
 
     // Find or create the company
-    let existingCompany = await this.companyRepository.findOneById(companyName);
+    let existingCompany =
+      await this.companyRepository.findOneByName(companyName);
     if (!existingCompany) {
       const companyToPersist = Company.create({
         id: undefined, // No ID since we're creating a new company

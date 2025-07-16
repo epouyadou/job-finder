@@ -44,9 +44,9 @@ export class ApplyJobButton {
 
     console.log('[Job Extension] Scraped Job:', job);
     
-    // this.applyForJob(job)
-    //   .then(() => console.log('[Job Extension] Job application submitted successfully.'))
-    //   .catch((error) => console.error('[Job Extension] Error applying for job:', error));
+    this.applyForJob(job)
+      .then(() => console.log('[Job Extension] Job application submitted successfully.'))
+      .catch((error) => console.error('[Job Extension] Error applying for job:', error));
   }
 
   static async applyForJob(job: JobInfo): Promise<void> {
@@ -72,11 +72,6 @@ export class ApplyJobButton {
 
     if (!response.ok) {
       throw new Error('Failed to apply for job');
-    }
-    
-    const result = await response.json();
-    if (!result.success) {
-      throw new Error(`Job application failed: ${result.message}`);
     }
   }
 }
